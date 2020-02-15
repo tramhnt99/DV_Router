@@ -71,7 +71,7 @@ class ReceiveEntity (Entity):
             update.add_destination(self.announce[0], self.announce[1])
             self.send(update, flood=True)
 
-def create (switch_type = DVRouter, host_type = BasicHost):
+def create (switch_type = switch, host_type = BasicHost):
     """
     Creates a topology with loops that looks like:
     h1a    s4--s5           h2a

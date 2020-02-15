@@ -3,11 +3,14 @@ from api import *
 class BasicHost (HostEntity):
   """ Basic host with a ping method """
 
-  def ping (self, dst, data=None):
+  def ping (self, dst, data=None): #dst type = BasicHost
     """ Sends a Ping packet to dst. """
     self.send(Ping(dst, data=data), flood=True)
 
   def handle_rx (self, packet, port):
+
+    print("BasicHost received packet")
+    
     """
     Silently drops messages to nobody.
     Warns about received messages to someone besides itself.
@@ -79,7 +82,7 @@ class Pong (Packet):
 #                                 self.dst.name if self.dst else None,
 #                                 self.is_link_up)
 
-# Changed to enable link latency - Kaifei Chen(kaifei@berkeley.edu)      
+# Changed to enable link latency - Kaifei Chen(kaifei@berkeley.edu)
 class DiscoveryPacket (Packet):
     """
     A "link latency change" packet.
@@ -97,7 +100,7 @@ class DiscoveryPacket (Packet):
                                  self.latency,
                                  self.is_link_up)
 
-class RoutingUpdate (Packet): 
+class RoutingUpdate (Packet):
     """
     A Routing Update message to use with your DVRouter implementation.
     """
@@ -125,4 +128,4 @@ class RoutingUpdate (Packet):
         return self.paths.keys()
 
     def str_routing_table(self):
-        return str(self.paths) 
+        return str(self.paths)
