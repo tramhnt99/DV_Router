@@ -9,8 +9,8 @@ class BasicHost (HostEntity):
 
   def handle_rx (self, packet, port):
 
-    print("BasicHost received packet")
-    
+    # print("BasicHost received packet")
+
     """
     Silently drops messages to nobody.
     Warns about received messages to someone besides itself.
