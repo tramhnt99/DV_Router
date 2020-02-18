@@ -17,6 +17,8 @@
     * Ping: currently just floods it
     
 *19.02.20*
+* Uppdated:
+ * forw_table to contain ports 
 * TODO: 
   * Update forw_table to contain ports to an Entity, and next_hop to get to the entity, and the distance to it
   * Update handle_rx at RoutingUpdate: fills in next_hop (from packet.paths), and distance
