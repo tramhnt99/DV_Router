@@ -133,6 +133,7 @@ create(switch)
 start = sim.core.simulate
 start()
 time.sleep(30)
+print("STARTING TO UNLINK")
 topo.unlink(s1, h1b)
 topo.unlink(s7, s6)
 topo.unlink(s3, s2)
