@@ -24,5 +24,8 @@
  * Using port and next_hop information, I can now forward Ping messages
 
 *21.02.20*
-
+ * TODO: implement poisoned reverse. Eg. say we're x, and to get to z, we route through y. Then, we have to advertise to y that x's path to z is infinity.
+ * Update
+  * We are not longer flooding new RoutingUpdates, but rather forwarding the ones we received
+ 
 
