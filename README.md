@@ -17,11 +17,12 @@
     * Ping: currently just floods it
     
 *19.02.20*
-* Uppdated:
- * forw_table to contain ports 
-* TODO: 
-  * Update forw_table to contain ports to an Entity, and next_hop to get to the entity, and the distance to it
-  * Update handle_rx at RoutingUpdate: fills in next_hop (from packet.paths), and distance
-  * Update handle_rx at DiscoveryPacket: fills in port
-  * Using this updated architecture, update response to Ping messages and forward messages
+* Updated:
+ * forw_table to contain ports, next_hop, and distance to an Entity
+ * When a router receives a RoutingUpdate, we edit next_hop and distance to the router's forwarding table
+ * When a router received DiscoverPacket, it fills in the port number of the neighbouring router
+ * Using port and next_hop information, I can now forward Ping messages
+
+*21.02.20*
+
 
