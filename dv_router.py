@@ -14,6 +14,7 @@ class DVRouter (Entity):
             self : array([None, None, 0])
         }
         #We need to flood a DiscoveryPacket of ourselves
+        #We are flooding it to our neighbours, so link latency is 1
         discover = DiscoveryPacket(self, 1)
         self.send(discover, flood = True) #TODO: find own port to not send to self?
 
@@ -42,28 +43,47 @@ class DVRouter (Entity):
                 #if dest not in our forwarding table, add it with + 1
                 #self.forw_table[i][2] is the 2nd element in array value (which is the distance to entity)
                 if i not in self.forw_table:
-
-                    #we put the next_hop as the src of the packet - as the distance would correspond to it
-                    self.forw_table[i] = array([None, packet.src, packet.get_distance(i) + 1])
-                    updates_to_flood[i] = packet.get_distance(i) + 1
-                    #We flood our update to the network only when it's a newly discovered entity
+                    assert packet.dst == NullAddress #sanity check that it's flooded by neighbour
+                    self.forw_table[i] = array([None, packet.src, packet.get_distance(i) + 1]) #1 because this packet is received from neighbour
                     update = RoutingUpdate()
                     for i in updates_to_flood:
                         update.add_destination(i, updates_to_flood[i])
                     self.send(update, port, flood = True)
                     print(self.forw_table)
 
-                #if it is in forw_table, add it if the path + 1 is shorter
+                #if it is in forw_table, and the link has been broken or no path to get there
                 else:
-                    if(self.forw_table[i][2] > packet.get_distance(i) + 1):
-                        self.forw_table[i][2] = packet.get_distance(i) + 1 #update distance
-                        self.forw_table[i][1] = packet.src #update next_hop
-                        updates_to_flood[i] = packet.get_distance(i) + 1
-                        #We flood our update to the network only when we found a shorter path
-                        update = RoutingUpdate()
-                        for i in updates_to_flood:
-                            update.add_destination(i, updates_to_flood[i])
-                        self.send(update, port, flood = True)
+                    if packet.dst == NullAddress:
+                        if(self.forw_table[i][2] > packet.get_distance(i) + 1):
+                            self.forw_table[i][2] = packet.get_distance(i) + 1 #update distance
+                            self.forw_table[i][1] = packet.src #update next_hop
+                            updates_to_flood[i] = packet.get_distance(i) + 1
+                            #We flood our update to the network only when we found a shorter path
+                            update = RoutingUpdate()
+                            for i in updates_to_flood:
+                                update.add_destination(i, updates_to_flood[i])
+                            self.send(update, port, flood = True)
+
+
+#CODE FOR updating a shorter path when received a specific RoutingUpdate pack
+
+                    # if (packet.get_distance(i) == float("inf")):
+                    #     self.forw_table[i][2] = float("inf")
+                    # else:
+                    #     #if it is in forw_table, add it if the path + distance to router is shorter
+                    #     if(self.forw_table[i][2] > packet.get_distance(i) + self.forw_table[packet.src][2]):
+                    #         self.forw_table[i][2] = packet.get_distance(i) + self.forw_table[packet.src][2] #update distance
+                    #         self.forw_table[i][1] = packet.src #update next_hop
+                            # #send this update to EVERYONE in the network
+                            # for entities in self.forw_table:
+                            #     if self.forw_table[entities][2] == float("inf"):
+                            #         return #drop the packet
+                            #     else:
+                            #         next_hop = self.forw_table[packet.dst][1]
+                            #         next_port = self.forw_table[next_hop][0]
+                            #         self.send(packet, next_port, flood = False)
+
+
 
 
         #DiscoveryPacket packet
@@ -82,20 +102,14 @@ class DVRouter (Entity):
                  # Silently drop packet
                  return
             if packet.dst is not self:
-              self.log("NOT FOR ME: %s %s" % (packet, trace), level="WARNING")
-              next_hop = self.forw_table[packet.dst][1]
-              next_port = self.forw_table[next_hop][0]
-              self.send(packet, next_port, flood = False)
-            else:
-              self.log("IS FOR ME: %s %s" % (packet, trace))
-              if type(packet) is Ping:
-                # Send a pong response
-                pong_dst = packet.src
-                next_hop = self.forw_table[pong_dst][1]
+                print("Ping received at" + str(self))
+                next_hop = self.forw_table[packet.dst][1]
                 next_port = self.forw_table[next_hop][0]
-                self.send(Pong(packet), next_port)
+                self.send(packet, next_port, flood = False)
+              # Assume that Ping is never sent to a router
 
 
+        #Pong packet
         if(isinstance(packet, Pong)):
             if packet.dst is NullAddress:
                 return
