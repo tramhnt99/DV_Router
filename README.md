@@ -37,5 +37,13 @@
   **TODO**
   * Addition to solution: say router A and B had a link and it was severed, when router A receives an update on how to reach B, anything beyond that is just whatever it was original (...) + this new path.
   * **new change** If RoutingUpdate packet is received as a result of a severed link, but the router that received it is a neighbour with an existing link to the router with a severed link, it will send only the paths that don't go throguh the neighbour AND update as well (anything that goes through the severed link = inf). 
+  
+  
+*23.02.20*
+ * Updates:
+  * Another problem with implementation is that when we can't differentiate if something is unreachable (like h1b), or it is now unreachable because it's next hop was compromised. This also prevents messages from links that are severed from propagating. e.g. s2 received that link with s3 is severed, so now h1b is unreachable. next time it receives a message h1b is unreachable (ie. = inf), it won't propagate it cause it's already = inf.
+  * Solution: Say link with router A is severed, don't switch all routers who's next hop is A to inf. Change the way you reach them - ie. if their next hop is reachable we assume the router is reachable. (this just means that we edit how the packets are forwarded - ie. ping function).
+  * Now that our our routers that are "unreachable" cause our next_hop is unreachable still have finite latencies and next_hops as that router with a severed link. Solution: When we find a path to that router A who's link we lost, anything that has router A as next hop - we update distance to og path from Router A + distance to router A, and next_hop to next_hop of router A. worked!
+  * Next problem: neihbour's next_hops are never fixed. basically say s3 and s2 are linked, then the link is lost, s1, who would want to reach s6 (for eg.), would take the path s3, s2, s6. But that can't happen. the thing is, the distance is incorrect but the message would still reach.
  
 
