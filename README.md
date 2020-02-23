@@ -34,6 +34,7 @@
   * RoutingUpdate packet received as a result of an severed link, if the received is not a neighbour to the router who's link was severed, it changes it's distance to said router to infinity, and any routers that need to reached via this router become "unreachable" - ie. and distance becomes infinity (keep next_hop).
   * If RoutingUpdate packet is received as a result of a severed link, but the router that received it is a neighbour with an existing link to the router with a severed link, it will flood it's own link to all it's neighbours to propagate it.   **changed**(**PROBLEM WITH THIS**, is that some paths it would take to other routers use the said link that was just severed (ie. we need to use poison reverse or split horizon)
   * Possible solution: from the neighbour_router next hop to a router is the router with the severed link, then don't advertise that (cause LOOP DUH)
+  **TODO**
   * Addition to solution: say router A and B had a link and it was severed, when router A receives an update on how to reach B, anything beyond that is just whatever it was original (...) + this new path.
   * **new change** If RoutingUpdate packet is received as a result of a severed link, but the router that received it is a neighbour with an existing link to the router with a severed link, it will send only the paths that don't go throguh the neighbour AND update as well (anything that goes through the severed link = inf). 
  
