@@ -43,9 +43,9 @@ class DVRouter (Entity):
 
                 #first we check if we received this because link is severed
                 if packet.get_distance(i) == float("inf"):
-                    # print(str(self) + "received that link is severed at" + str(i))
+                    print(str(self) + "received that link is severed at" + str(i))
                     if self.forw_table[i][2] == 1: #if the router with severed link is our neighbour
-                        print(str(self) + " is neighbour to " + str(i) + "and flooding that everywhere")
+                        # print(str(self) + " is neighbour to " + str(i) + "and flooding that everywhere")
                         update = RoutingUpdate()
                         update.add_destination(i, 1)
                         neighbour_port = self.forw_table[i][0]
@@ -59,13 +59,13 @@ class DVRouter (Entity):
                         self.send(update_neighbour, neighbour_port, flood = False)
 
                     else:
-                        print(str(self) + "is changing to inf its path to" + str(i))
+                        # print(str(self) + "is changing to inf its path to" + str(i))
                         if self.forw_table[i][2] != float("inf"):
                             self.forw_table[i][2] = float("inf")
-                            for r in self.forw_table:
-                                if self.forw_table[r][1] == i: #if your next hop is i
-                                    # self.forw_table[r][1] = None #remove it as a next_hop
-                                    self.forw_table[r][2] = float("inf") #you no longer have a path to it
+                            # for r in self.forw_table:
+                            #     if self.forw_table[r][1] == i: #if your next hop is i
+                            #         # self.forw_table[r][1] = None #remove it as a next_hop
+                            #         self.forw_table[r][2] = float("inf") #you no longer have a path to it
                             update = RoutingUpdate()
                             update.add_destination(i,float("inf"))
                             self.send(update, port, flood = True)
@@ -79,33 +79,60 @@ class DVRouter (Entity):
                     if i not in self.forw_table:
                         assert packet.dst == NullAddress, "It should only be added to table if flooded by neighbour"
                         self.forw_table[i] = array([None, packet.src, packet.get_distance(i) + 1]) # plus 1 cause flooded by neighbour
-                        updates_to_flood[i] = packet.get_distance(i) + 1
+                        update = RoutingUpdate()
+                        update.add_destination(i, packet.get_distance(i) + 1)
+                        self.send(update, port, flood = True)
+
 
                     #if it is in forw_table, add it if the path + 1 is shorter
                     else:
                         if packet.dst == NullAddress:
-                            if(self.forw_table[i][2] > packet.get_distance(i) + 1):
-                                # if self.forw_table[i][2] == float("inf"):
-                                #     print("We're updating the inf at " + str(self) + "for " + str(i))
-                                og_infinity = self.forw_table[i][2] == float("inf") #originally inifinity?
-                                self.forw_table[i][2] = packet.get_distance(i) + 1 #update distance
-                                self.forw_table[i][1] = packet.src #update next_hop
-                                if og_infinity:
-                                    updates_to_flood[i] = packet.get_distance(i) + 1
+                            if self.forw_table[i][2] > (packet.get_distance(i) + 1) or self.forw_table[i][1] == packet.src: #the second condition is ALWAYS true though??
 
-                    #We flood our update to the network only when it's a newly discovered entity or we found shorter path
-                    update = RoutingUpdate()
-                    if updates_to_flood: #if the dictionary is not empty
-                        for i in updates_to_flood:
-                            update.add_destination(i, updates_to_flood[i])
-                        self.send(update, port, flood = True)
+                                og_infinity = self.forw_table[i][2] == float("inf") #originally inifinity?
+
+                                if og_infinity:
+                                    # print("We're updating the inf at " + str(self) + "for " + str(i))
+                                    if self.forw_table[i][1] == None: #if it's our original neighbour who's link we lost
+                                        self.forw_table[i][2] = packet.get_distance(i) + 1 #update distance
+                                        self.forw_table[i][1] = packet.src #update next_hop
+
+
+                                        update = RoutingUpdate()
+                                        update.add_destination(i, packet.get_distance(i) + 1)
+
+                                        for r in self.forw_table: #update all router who's next hop was the router we lost the link with
+                                            if self.forw_table[r][1] == i:
+                                                update.add_destination(i, packet.get_distance(i) + self.forw_table[r][2])
+                                                self.forw_table[r][1] = packet.src
+                                                self.forw_table[r][2] = self.forw_table[r][2] + packet.get_distance(i)
+                                        self.send(update, port, flood = True)
+
+                                    else:
+                                        self.forw_table[i][2] = packet.get_distance(i) + 1 #update distance
+                                        self.forw_table[i][1] = packet.src #update next_hop
+                                else:
+                                    self.forw_table[i][2] = packet.get_distance(i) + 1 #update distance
+                                    self.forw_table[i][1] = packet.src #update next_hop
+                                print(str(self) + " route to " + str(i) + "from inf to a finite path")
+                                update = RoutingUpdate()
+                                update.add_destination(i, packet.get_distance(i) + 1)
+                                self.send(update, port, flood = True)
+
             print(self.forw_table)
             print("\n")
+
+
+
+
 
 
         #DiscoveryPacket packet
         if(isinstance(packet, DiscoveryPacket)):
             if packet.src not in self.forw_table:
+                print(str(self) + " received a DiscoveryPacket from " + str(packet.src))
+                print(self.forw_table)
+                print("\n")
                 self.forw_table[packet.src] = array([port, packet.src, packet.latency])
                 update = RoutingUpdate()
                 update.add_destination(packet.src, packet.latency)
@@ -114,10 +141,11 @@ class DVRouter (Entity):
             if packet.is_link_up == False:
                 print(str(self) + " just received a severed link packet from " + str(packet.src))
                 self.forw_table[packet.src][2] = float("inf") #update your link distance to the router
-                for r in self.forw_table:
-                    if self.forw_table[r][1] == packet.src: #if the next_hop to a router is the one we don't have a link with
-                        # self.forw_table[r][1] = None #we no longer have a next hop
-                        self.forw_table[r][2] = float("inf") #we no longer have a path to it
+                self.forw_table[packet.src][1] = None #update the next_hop - it's not that anymore
+                # for r in self.forw_table:
+                #     if self.forw_table[r][1] == packet.src: #if the next_hop to a router is the one we don't have a link with
+                #         # self.forw_table[r][1] = None #we no longer have a next hop
+                #         self.forw_table[r][2] = float("inf") #we no longer have a path to it
                 update = RoutingUpdate()
                 update.add_destination(packet.src, float("inf"))
                 self.send(update, port, flood = True)
@@ -140,6 +168,9 @@ class DVRouter (Entity):
                  return
             if self.forw_table[packet.dst][2] == float("inf"):
                 #Drop packet cause we can't reach there
+                return
+            if self.forw_table[self.forw_table[packet.dst][1]][2] == float("inf"):
+                #If next hop of the path is unreachable, we drop the packet
                 return
             if packet.dst is not self:
               # self.log("NOT FOR ME: %s %s" % (packet, trace), level="WARNING")
