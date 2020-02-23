@@ -45,5 +45,6 @@
   * Solution: Say link with router A is severed, don't switch all routers who's next hop is A to inf. Change the way you reach them - ie. if their next hop is reachable we assume the router is reachable. (this just means that we edit how the packets are forwarded - ie. ping function).
   * Now that our our routers that are "unreachable" cause our next_hop is unreachable still have finite latencies and next_hops as that router with a severed link. Solution: When we find a path to that router A who's link we lost, anything that has router A as next hop - we update distance to og path from Router A + distance to router A, and next_hop to next_hop of router A. worked!
   * Next problem: neihbour's next_hops are never fixed. basically say s3 and s2 are linked, then the link is lost, s1, who would want to reach s6 (for eg.), would take the path s3, s2, s6. But that can't happen. the thing is, the distance is incorrect but the message would still reach.
+  * Another problem: s2 and s3 link is severed. for s1 to get to s2, originally it would go s1, s3, s2. now, it's next_hop is still s_3 but it can't get to s2 -> we'll get a loop
  
 
