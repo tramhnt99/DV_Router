@@ -55,7 +55,5 @@
   * When a router receives a severed link, anything that has it as the next_hop, next_hop = None. Thus, when it receives an update on a router, a path towards which next_hop == None, we update it.
  * Intution on fixing problem 1: When a router receives that a neighbour's link is corrupted, if the neighbour is the next_hop, put next_hop as None until further notice. (am running this first to see if it converges)
  * Continuing to fix problem 1: Currently, say the link between s7 and s6 is severed, once s7 finds a path to s6, it floods to its neighbours all the "new" paths to routers where s6 was the next_hop. But, we should flood all the paths it knows, so that anything that the router knows which paths through s7 are still there.
- * ok so, that might've been stupid. New solution to problem 1.
- 
- * Say link between s3 and s2 is lost, s3 floods that s2 is inf to s1. s1 *pings* s4 on all the routers it might not be able to reach through s4, and s4 sends a 
+ * ok so, that might've been stupid. *the last 2 bullet points have been removed from implementation*
 
