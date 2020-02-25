@@ -40,7 +40,6 @@ class Ping (Packet):
   def __init__ (self, dst, data=None):
     Packet.__init__(self, dst=dst)
     self.data = data
-    print(type(data))
     self.outer_color[3] = 1 # Full opacity
     self.inner_color = [1,1,1,1] # white
 
