@@ -56,4 +56,9 @@
  * Intution on fixing problem 1: When a router receives that a neighbour's link is corrupted, if the neighbour is the next_hop, put next_hop as None until further notice. (am running this first to see if it converges)
  * Continuing to fix problem 1: Currently, say the link between s7 and s6 is severed, once s7 finds a path to s6, it floods to its neighbours all the "new" paths to routers where s6 was the next_hop. But, we should flood all the paths it knows, so that anything that the router knows which paths through s7 are still there.
  * ok so, that might've been stupid. *the last 2 bullet points have been removed from implementation*
+ 
+ 
+ *25.02.20*
+ * Found mistake at line 123 "if self.forw_table[r][1] == i:"
+  * This should not be the case here because we no longer have a link with i, so i would never be our next hop - so this is never run
 
