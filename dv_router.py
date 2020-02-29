@@ -130,7 +130,7 @@ class DVRouter (Entity):
                                                 update.add_destination(i, self.forw_table[r][2] + packet.get_distance(i))
                                                 self.forw_table[r][1] = packet.src
                                                 self.forw_table[r][2] = self.forw_table[r][2] + packet.get_distance(i)
-                                        print("printing the forwarding table sent after a we found a path to a lost router " + str(self.forw_table))
+                                        # print("printing the forwarding table sent after a we found a path to a lost router " + str(self.forw_table))
                                         self.send(update, port, flood = True) #don't flood it to port, because that's just going to create a loop
 
                                         self.send(Ping(packet.src, data = data), port = port, flood = False)
@@ -146,23 +146,23 @@ class DVRouter (Entity):
                                 update = RoutingUpdate()
                                 update.add_destination(i, packet.get_distance(i) + 1)
                                 self.send(update, port, flood = True)
-            print(self.forw_table)
-            print("\n")
+            # print(self.forw_table)
+            # print("\n")
 
 
         #DiscoveryPacket packet
         if(isinstance(packet, DiscoveryPacket)):
             if packet.src not in self.forw_table:
-                print(str(self) + " received a DiscoveryPacket from " + str(packet.src))
-                print(self.forw_table)
-                print("\n")
+                # print(str(self) + " received a DiscoveryPacket from " + str(packet.src))
+                # print(self.forw_table)
+                # print("\n")
                 self.forw_table[packet.src] = array([port, packet.src, packet.latency])
                 update = RoutingUpdate()
                 update.add_destination(packet.src, packet.latency)
                 # print(str(self) + " is about to flood a DiscoverPacket sent from " + str(packet.src))
                 self.send(update, port, flood = True)
             if packet.is_link_up == False:
-                print(str(self) + " just received a severed link packet from " + str(packet.src))
+                # print(str(self) + " just received a severed link packet from " + str(packet.src))
                 self.forw_table[packet.src][2] = float("inf") #update your link distance to the router
                 self.forw_table[packet.src][1] = None #update the next_hop - it's not that anymore
                 for r in self.forw_table:
@@ -172,16 +172,10 @@ class DVRouter (Entity):
                 update = RoutingUpdate()
                 update.add_destination(packet.src, float("inf"))
                 self.send(update, port, flood = True)
-
-                # for i in self.forw_table:
-                #     if self.forw_table[i][0] != None:
-                #         if self.forw_table[i][2] != float("inf"):
-                #             print(str(self) + "is sending severed link Discovery packet to" + str(i) + "at port" + str(self.forw_table[i][0]))
-                #             update = RoutingUpdate()
-                #             update.add_destination(packet.src, float("inf"))
-                #             self.send(update, self.forw_table[i][0])
-
-                            #only send to neighbours who's link is not severed
+            if packet.latency != self.forw_table[packet.src][1]: #if current distance to packet is not the same as updated latency
+                self.forw_table[packet.src][2] = packet.latency
+                update = RoutingUpdate()
+                update.add_destination(packet.src, packet.latency)
 
 
         #Ping packet
@@ -203,10 +197,10 @@ class DVRouter (Entity):
                   next_port = self.forw_table[next_hop][0]
                   self.send(packet, next_port, flood = False)
             else: #packet.dst is self
-                print("a ping from " + str(packet.src) + " to " + str(self) + " has been received with data " + str(packet.data))
+                # print("a ping from " + str(packet.src) + " to " + str(self) + " has been received with data " + str(packet.data))
                 if packet.data["Kind of message"] == "Don't route through me!":
-                    print("packet.data[Data] is ")
-                    print(packet.data["Data"])
+                    # print("packet.data[Data] is ")
+                    # print(packet.data["Data"])
                     routers_to_update = packet.data["Data"]
                     ask_for_path = RoutingUpdate()
                     for r in routers_to_update:
@@ -215,10 +209,10 @@ class DVRouter (Entity):
                             ask_for_path.add_destination(r, -1)
                     if len(ask_for_path.all_dests()) > 0:
                         self.send(ask_for_path, port, flood = True)
-                    print("ask_for_path.all_dests() is ")
-                    print(ask_for_path.all_dests())
-                    print(self.forw_table)
-                    print("\n")
+                    # print("ask_for_path.all_dests() is ")
+                    # print(ask_for_path.all_dests())
+                    # print(self.forw_table)
+                    # print("\n")
 
 
         if(isinstance(packet, Pong)):
